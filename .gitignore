@@ -1,0 +1,11 @@
+*.out
+*.gcno
+*.gcda
+prog
+*.java
+*.cpp.gcov
+.vscode/
+test
+*.gcov
+*.txt
+trial.cpp
