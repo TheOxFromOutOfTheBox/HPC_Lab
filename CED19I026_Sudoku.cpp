@@ -6,7 +6,7 @@ using namespace std;
 
 int WIDTH_9X9 = 9;
 int WIDTH_16X16 = 16;
-int BOARD_WIDTH = WIDTH_16X16;
+int BOARD_WIDTH = WIDTH_9X9;
 int SUB_WIDTH = ((int)sqrt(BOARD_WIDTH));
 char START_CHAR = 'A';
 long nSolutionTracker = 0;

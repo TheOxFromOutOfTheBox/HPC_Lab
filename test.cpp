@@ -2,12 +2,15 @@
 #include "iostream"
 #include "math.h"
 #include "omp.h"
+#include <fstream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
 int WIDTH_9X9 = 9;
 int WIDTH_16X16 = 16;
-int BOARD_WIDTH = WIDTH_16X16;
+int BOARD_WIDTH = WIDTH_9X9;
 int SUB_WIDTH = ((int)sqrt(BOARD_WIDTH));
 char START_CHAR = 'A';
 long nSolutionTracker = 0;
@@ -313,17 +316,7 @@ bool solveBoard(char **board, int rStart, int cStart, int n)
 		rStart++;
 	}
 
-	// long currentTime = System.currentTimeMillis();
-	// if(0 == nSolutionTracker)
-	// {
-	//     nSolutionTracker = currentTime;
-	// }
-	// if((currentTime-nSolutionTracker) > 5000)
-	// {
-	// nSolutionTracker = currentTime;
 	cout << "\nSolved :" << ((rStart * BOARD_WIDTH + cStart) * 100) / (BOARD_WIDTH * BOARD_WIDTH);
-	printBoard(board, n);
-	// }
 
 	bool bPutChar = false;
 	for (int r = rStart; r < n; r++)
@@ -348,28 +341,62 @@ int main()
 {
 	cout << SUB_WIDTH << endl;
 	int totalNumOfSudoku = 100;
-	int n = 9;
-    #pragma omp parallel for
-	for (int i = 0; i < totalNumOfSudoku; i++)
+	// int n = 9;
+
+	// read sudoku list from txt file
+	fstream newfile;
+	vector<string> sudokulist;
+	newfile.open("nsudoku.txt", ios::in); // open a file to perform read operation using file object
+	cout << "Hi" << endl;
+	if (newfile.is_open())
+	{ // checking whether the file is open
+		string tp;
+		while (getline(newfile, tp))
+		{	// read data from file object and put it into string.
+			// cout << tp << "\n"; // print the data of the string
+			sudokulist.push_back(tp);
+		}
+		newfile.close(); // close the file object.
+	}
+// #pragma omp parallel for
+	for (int i = 0; i < sudokulist.size(); i++)
 	{
-		char **board = getRandomBoard(n);
+		char **board = new char *[WIDTH_9X9];
+		for (int i = 0; i < WIDTH_9X9; i++)
+		{
+			// Declare a memory block of size n
+			board[i] = new char[WIDTH_9X9];
+		}
+		string testcase=sudokulist[i];
+		for (int i = 0; i < WIDTH_9X9; i++)
+		{
+			for(int j = 0; j < WIDTH_9X9; j++){
+				if(testcase[(i*9)+j]=='0'){
+					board[i][j] = '.';
+				}
+				else{
+					board[i][j]=testcase[(i*9)+j];
+				}
+			}
+		}
 		// char[][] board = getBoard_9x9_Easy_1();
 		// char[][] board = getBoard_9x9_Evil_1();
 		cout << ("\nProblem board:");
-		printBoard(board, n);
-		if (isValidSudoku(board, n))
+		printBoard(board, WIDTH_9X9);
+		// return 0;
+		if (isValidSudoku(board, WIDTH_9X9))
 		{
 			cout << ("isValidSudoku() before solving returned true.") << endl;
 			// long starttime = System.currentTimeMillis();
-			solveBoard(board, 0, 0, n);
+			solveBoard(board, 0, 0, WIDTH_9X9);
 			// long stoptime = System.currentTimeMillis();
-			cout << ("\nSolved board:");
-			printBoard(board, n);
+			// cout << ("\nSolved board:");
+			// printBoard(board, n);
 			// System.out.format("Solution took %d ms.\n", (stoptime-starttime));
-			if (isValidSudoku(board, n))
+			if (isValidSudoku(board, WIDTH_9X9))
 			{
 				cout << ("isValidSudoku() after solving returned true.") << endl;
-				if (isBoardSolved(board, n))
+				if (isBoardSolved(board, WIDTH_9X9))
 				{
 					cout << ("isBoardSolved() after solving returned true.") << endl;
 				}
