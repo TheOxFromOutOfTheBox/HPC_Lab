@@ -26,6 +26,7 @@ void addition_parallel(int n) {
     double endTime = omp_get_wtime();
     // printf(" Parallel = %f\n", endTime-startTime);
     printf("%d,%f\n",num_threads,endTime-startTime);
+     // printf(" Parallel = %f\n", endTime-startTime);
 
 }
 
