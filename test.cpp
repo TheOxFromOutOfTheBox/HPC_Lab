@@ -1,7 +1,7 @@
-#include "stdlib.h"
-#include "iostream"
-#include "math.h"
-#include "omp.h"
+#include <stdlib.h>
+#include <iostream>
+#include <math.h>
+#include <omp.h>
 #include <fstream>
 #include <string>
 #include <vector>
