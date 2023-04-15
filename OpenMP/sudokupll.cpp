@@ -20,12 +20,11 @@ char *getHorizontalSubArray(char **board, int ix, int n)
 {
     char *subarray = new char[n];
 #pragma omp parallel for
-    
-        for (int i = 0; i < n; i++)
-        {
-            subarray[i] = board[ix][i];
-        }
-    
+
+    for (int i = 0; i < n; i++)
+    {
+        subarray[i] = board[ix][i];
+    }
 
     return subarray;
 }
@@ -34,10 +33,10 @@ char *getVerticalSubArray(char **board, int ix, int n)
 {
     char *subarray = new char[n];
 #pragma omp parallel for
-        for (int i = 0; i < n; i++)
-        {
-            subarray[i] = board[i][ix];
-        }
+    for (int i = 0; i < n; i++)
+    {
+        subarray[i] = board[i][ix];
+    }
     return subarray;
 }
 
@@ -48,18 +47,11 @@ char *getMxMSubArray(char **board, int ix, int n)
     int cOffset = SUB_WIDTH * (ix % SUB_WIDTH);
     int rOffset = SUB_WIDTH * (ix / SUB_WIDTH);
 
-    int i = 0;
-#pragma omp parallel for collapse(2)
-    
-        for (int r = 0; r < n / SUB_WIDTH; r++)
-        {
-            for (int c = 0; c < n / SUB_WIDTH; c++)
-            {
-                subarray[i] = board[rOffset + r][cOffset + c];
-                i++;
-            }
-        }
-    
+    #pragma omp parallel for
+    for(int i=0; i<n; i++){
+        subarray[i] = board[rOffset+(i/3)][cOffset+(i%3)];
+    }
+
     return subarray;
 }
 
@@ -73,35 +65,40 @@ bool checkSudokuSubarray(char *array, int n)
         // cout<<array[i]<<" ";
         temp[i] = false;
     }
-
-    for (int i = 0; i < nBOARD_WIDTH; i++)
-    {
-
-        if ((array[i] >= START_CHAR) && (array[i] <= (START_CHAR + nBOARD_WIDTH)))
+    bool res = true;
+#pragma omp parallel for shared(res,temp)
+    // {
+        for (int i = 0; i < nBOARD_WIDTH; i++)
         {
-            int iPos = (array[i] - START_CHAR);
-            if (false == temp[iPos])
+
+            if ((array[i] >= START_CHAR) && (array[i] <= (START_CHAR + nBOARD_WIDTH)))
             {
-                temp[iPos] = true;
+                int iPos = (array[i] - START_CHAR);
+                if (false == temp[iPos])
+                {
+                    temp[iPos] = true;
+                }
+                else
+                {
+                    // cout<<"Why u do this? "<<array[i]<<endl;
+                    // return false;
+                    res = false;
+                }
+            }
+            else if (array[i] == '.')
+            {
+                continue;
             }
             else
             {
-                // cout<<"Why u do this? "<<array[i]<<endl;
-                return false;
+                // cout<<"Wrong at "<<array[i]<<endl;
+                // return false;
+                res = false;
             }
         }
-        else if (array[i] == '.')
-        {
-            continue;
-        }
-        else
-        {
-            // cout<<"Wrong at "<<array[i]<<endl;
-            return false;
-        }
-    }
+    // }
     // cout<<endl;
-    return true;
+    return res;
 }
 
 bool isValidSudoku(char **&board, int n)
@@ -183,7 +180,6 @@ void printBoard(char **board, int n)
     printHorizontalBorder(board, n);
 }
 
-
 bool canPutChar(char **board, int r, int c, char digit, int n)
 {
     if ((r >= 0) && (r < n))
@@ -218,17 +214,19 @@ bool canPutChar(char **board, int r, int c, char digit, int n)
 
 bool isBoardSolved(char **board, int n)
 {
-    // #pragma omp parallel for
+    bool isSolved = true;
+    #pragma omp parallel for collapse(2)
     for (int r = 0; r < n; r++)
     {
         for (int c = 0; c < n; c++)
         {
             if ('.' == board[r][c])
                 // #pragma omp cancel parallel
-                return false;
+                isSolved = false;
+                // return false;
         }
     }
-    return isValidSudoku(board, n);
+    return isSolved && isValidSudoku(board, n);
 }
 
 bool solveBoard(char **board, int rStart, int cStart, int n)
@@ -240,8 +238,8 @@ bool solveBoard(char **board, int rStart, int cStart, int n)
         rStart++;
     }
 
-    cout << "\nSolved :" << ((rStart * BOARD_WIDTH + cStart) * 100) / (BOARD_WIDTH * BOARD_WIDTH);
-    printBoard(board, n);
+    // cout << "\nSolved :" << ((rStart * BOARD_WIDTH + cStart) * 100) / (BOARD_WIDTH * BOARD_WIDTH);
+    // printBoard(board, n);
 
     bool bPutChar = false;
     for (int r = rStart; r < n; r++)
@@ -267,7 +265,7 @@ int main()
     auto start = high_resolution_clock::now();
     fstream newfile;
     vector<string> sudokulist;
-    newfile.open("nsudoku.txt", ios::in); // open a file to perform read operation using file object
+    newfile.open("nsodoku.txt", ios::in); // open a file to perform read operation using file object
     cout << "Hi" << endl;
     if (newfile.is_open())
     { // checking whether the file is open
@@ -278,6 +276,8 @@ int main()
         }
         newfile.close(); // close the file object.
     }
+    #pragma omp parallel for
+
     for (int i = 0; i < sudokulist.size(); i++)
     {
         char **board = new char *[WIDTH_9X9];
@@ -303,14 +303,14 @@ int main()
             }
         }
 
-        cout << ("\nProblem board:");
-        printBoard(board, WIDTH_9X9);
+        // cout << ("\nProblem board:");
+        // printBoard(board, WIDTH_9X9);
         if (isValidSudoku(board, WIDTH_9X9))
         {
             cout << ("isValidSudoku() before solving returned true.") << endl;
             solveBoard(board, 0, 0, WIDTH_9X9);
-            cout << ("\nSolved board:");
-            printBoard(board, WIDTH_9X9);
+            // cout << ("\nSolved board:");
+            // printBoard(board, WIDTH_9X9);
             if (isValidSudoku(board, WIDTH_9X9))
             {
                 cout << ("isValidSudoku() after solving returned true.") << endl;
@@ -339,23 +339,9 @@ int main()
     // To get the value of duration use the count()
     // member function on the duration object
     cout << duration.count() << endl;
+    cout<<"END ONE TIME" << endl;
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // char **getRandomBoard(int N)
 // {
@@ -367,7 +353,6 @@ int main()
 //         board[i] = new char[N];
 //     }
 //     char *aNums = new char[N];
-
 
 //     int iAttempt = 0;
 //     while (!isValidSudoku(board, N))
