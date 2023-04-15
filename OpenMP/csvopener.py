@@ -1,6 +1,6 @@
 import pandas as pd
 
-df=pd.read_csv("sudoku.csv")
+df=pd.read_csv("sudoku.csv") #read csv
 
 #print(df['puzzle'][0])
 
